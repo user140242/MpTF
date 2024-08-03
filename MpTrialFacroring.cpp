@@ -300,8 +300,21 @@ int MpTF(unsigned long long P, int min_exp_D , int max_exp_D)
                             mpz_add_ui(d_temp, d_temp, RW[7 - j + 8 * jb] );
                             if (is_2pow_1_mod_z(P_vector, b, d_temp))
                             {
-                                if(count_f > 0)
-                                    std::cout << ",";                                    
+                                if(count_f == 0)
+                                {
+                                    time_t time_c;
+                                    char datetimestr[20];
+                                    struct tm * datetime;
+                                    time(&time_c);
+                                    datetime = localtime(&time_c);
+                                    strftime(datetimestr, 20, "%F %T", datetime);
+                                    std::cout << "\n{\"timestamp\":\"" << datetimestr << "\", \"exponent\":" << P << ", \"worktype\":\"TF\", \"status\":\"F\", ";
+                                    std::cout << "\"bitlo\":" << min_exp_D << ", \"bithi\":" << max_exp_D << ", \"rangecomplete\":true, \"factors\":[";
+                                }
+                                else
+                                {
+                                    std::cout << ",";
+                                }                                    
                                 std::cout << "\"" <<mpz_get_str(NULL, 10, d_temp) << "\"";
                                 count_f++;
                             }
@@ -418,49 +431,42 @@ int main(int argc, char *argw[])
         bit_i = std::max(1, bit_i);
         bit_i = std::min(127, bit_i);
         bit_f = std::min(127, bit_f);
+        time_t time_c;
+        char datetimestr[20];
+        struct tm * datetime;
         unsigned long long q, p;
         auto ti = std::chrono::system_clock::now();
         for (p = p_start; p <= p_stop; p += 2)
         {            
             int count_f = 0;    
-            time_t time_c;
-            char datetimestr[20];
-            struct tm * datetime;
             q = first_factor(p);
             if (q == 1)
             {
-                time(&time_c);
-                datetime = localtime(&time_c);
-                strftime(datetimestr, 20, "%F %T", datetime);
-                std::cout << "\n\n\n{\"timestamp\":\"" << datetimestr << "\", \"exponent\":" << p << ", \"worktype\":\"TF\", \"status\":\"F\", \"bitlo\":" << bit_i << ", \"bithi\":" << bit_f;
-                std::cout << ", \"rangecomplete\":true, \"factors\":[";    
                 count_f = MpTF(p , bit_i , bit_f);
-				if (count_f == -1)
+                if (count_f == -1)
                 {
                     std::cout << "\n error enter p >= 127 or the p value is too large" << std::endl;
                     break;
                 }
                 else
                 {
-					if (count_f > 0)
-						std::cout << "], \"program\":{\"name\":\"MpTF\",\"version\":\"1.0.3\"}, \"user\":\"" << username << "\", \"computer\":\"" << pcname << "\"}";
-					else
-                        std::cout << "<-Incorrect text do not use" << std::endl;
-                    if (argc == 4)
+                    if (count_f > 0)
+                        std::cout << "], \"program\":{\"name\":\"MpTF\",\"version\":\"1.0.3\"}, \"user\":\"" << username << "\", \"computer\":\"" << pcname << "\"}";
+                    else
                     {
-                        std::cout << "\n \nexecuted trial factoring from 2^" << bit_i << " to 2^" << bit_f << std::endl;
-                        if (count_f > 0)
-                            std::cout << "found " << count_f << " factors" << std::endl;
-                    }
-                    if (count_f == 0)
-                    {
-                        if (argc == 4)
-                            std::cout << "\nNo factors found\n" << std::endl;
                         time(&time_c);
                         datetime = localtime(&time_c);
                         strftime(datetimestr, 20, "%F %T", datetime);
                         std::cout << "\n{\"timestamp\":\"" << datetimestr << "\", \"exponent\":" << p << ", \"worktype\":\"TF\", \"status\":\"NF\", \"bitlo\":" << bit_i << ", \"bithi\":" << bit_f;
                         std::cout << ", \"rangecomplete\":true, \"program\":{\"name\":\"MpTF\",\"version\":\"1.0.3\"}, \"user\":\"" << username << "\", \"computer\":\"" << pcname << "\"}";
+                    }
+                    if (argc == 4)
+                    {
+                        std::cout << "\n \nexecuted trial factoring from 2^" << bit_i << " to 2^" << bit_f << std::endl;
+                        if (count_f > 0)
+                            std::cout << "found " << count_f << " factors" << std::endl;
+                        else
+                            std::cout << "\nNo factor found\n" << std::endl;
                     }
                 }
             }
